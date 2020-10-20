@@ -16,3 +16,9 @@
                     name: httpd
                     enabled: yes
                     state: started
+
+          - name: allow firewall on http
+            firewalld:
+                    port: 80/tcp
+                    permanent: yes
+                    state: enabled
