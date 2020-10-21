@@ -4,19 +4,30 @@
   become: true
   pre_tasks:
 
-          - name: install updates (CentOS8)
+          - name: update repo cache (CentOS)
             tags: allways
             dnf:
-                    update_only: yes
                     update_cache: yes
+            changed_when: false
             when: ansible_distribution_file_variety == "RedHat"
             
-          - name: install updates (Ubuntu)
+          - name: update repo cache (Ubuntu)
             tags: allways
             apt:
-                    upgrade: dist
                     update_cache: yes
+            changed_when: false
             when: ansible_distribution_file_variety == "Debian"
+
+
+- hosts: all
+  become: true
+  tasks:
+
+          - name: add ssh key for siri
+            tags: always
+            authorized_key:
+                    user: siri
+                    key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPK3pLWdyGVYS1RQKnC/QYnAy9uyazqe6V9ScEG0vtIv ansible
 
 
 - hosts: web_servers
@@ -136,9 +147,9 @@
           - name: enable samba service (CentOS)
             tags: samba,file,centos,systemd
             systemd:
-                    name: 
-                            - smb
-                            - nmb
+                    name: nmb
+                    # - smb
+                    # - nmb
                     enabled: yes
                     state: started
             when: ansible_distribution_file_variety == "RedHat"
