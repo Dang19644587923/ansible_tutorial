@@ -2,3 +2,13 @@
   authorized_key:
           user: siri
           key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPK3pLWdyGVYS1RQKnC/QYnAy9uyazqe6V9ScEG0vtIv ansible"
+
+- name: generate sshd config file from template
+  tags: ssh
+  template:
+          src: "{{ ssh_template_file }}"
+          dest: /etc/ssh/sshd_config
+          owner: root
+          group: root
+          mode: 644
+  notify: restart_sshd
