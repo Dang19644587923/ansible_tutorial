@@ -1,184 +1,48 @@
 ---
 
-- hosts: all 
+- hosts: all
   become: true
   pre_tasks:
-
+          
           - name: update repo cache (CentOS)
-            tags: allways
+            tags: always
             dnf:
                     update_cache: yes
             changed_when: false
             when: ansible_distribution_file_variety == "RedHat"
-            
+
           - name: update repo cache (Ubuntu)
-            tags: allways
+            tags: always
             apt:
                     update_cache: yes
             changed_when: false
             when: ansible_distribution_file_variety == "Debian"
-
-
-- hosts: all
+            
+- hosts: all 
   become: true
-  tasks:
+  roles:
+          - base
 
-          - name: add ssh key for siri
-            tags: always
-            authorized_key:
-                    user: siri
-                    key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPK3pLWdyGVYS1RQKnC/QYnAy9uyazqe6V9ScEG0vtIv ansible
+
+- hosts: workstations 
+  become: true
+  roles:
+          - workstations
 
 
 - hosts: web_servers
   become: true
-  tasks:
+  roles:
+          - web_servers
 
-          - name: install apache and php support package (Ubuntu)
-            tags: apache,apache2,httpd
-            apt:
-                    name:
-                            - apache2
-                            - libapache2-mod-php
-                    state: latest
-            when: ansible_distribution_file_variety == "Debian"
-
-          - name: install apache and php support package (CentOS)
-            tags: apache,httpd,centos
-            dnf:
-                    name:
-                            - httpd
-                            - php
-                    state: latest
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: enable apache2
-            tags: apache,httpd,systemd,centos
-            systemd:
-                    name: httpd
-                    enabled: yes
-                    state: started
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: allow firewall on http
-            tags: apache,httpd,firewall,centos
-            firewalld:
-                    port: 80/tcp
-                    permanent: yes
-                    immediate: yes
-                    state: enabled
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: copy default html file for site
-            tags: apache,httpd,apache2
-            copy:
-                    src: files/default_site.html
-                    dest: /var/www/html/index.html
-                    owner: root
-                    group: root
-                    mode: 0644
-
-          - name: change admin email address
-            tags: apache,httpd,centos
-            lineinfile:
-                    path: /etc/httpd/conf/httpd.conf
-                    regexp: '^ServerAdmin'
-                    line: ServerAdmin jonhwalker@myhome.local
-            when: ansible_distribution_file_variety == "RedHat"
-            register: httpd
-
-          - name: restart httpd (centOS)
-            tags: apache,httpd,centos
-            systemd:
-                    name: httpd
-                    state: restarted
-            when: httpd.changed
 
 - hosts: db_servers
   become: true
-  tasks:
-
-          - name: install mariadb package (Ubuntu)
-            tags: mariadb,db,ubuntu
-            apt:
-                    name: mariadb-server
-                    state: latest
-            when: ansible_distribution_file_variety == "Debian"
-
-          - name: install mariadb package (CentOS)
-            tags: mariadb,db,centos
-            dnf:
-                    name:
-                            - mariadb
-                            - mariadb-server
-                    state: latest
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: enable mariadb service (CentOS)
-            tags: mariadb,db,centos,systemd
-            systemd:
-                    name: mariadb
-                    enabled: yes
-                    state: started
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: allow mariadb connection get throught firewall (CentOS)
-            tags: mariadb,db,centos,firewall
-            firewalld:
-                    port: 3306/tcp
-                    permanent: yes
-                    immediate: yes
-                    state: enabled
-            when: ansible_distribution_file_variety == "RedHat"
-
-
+  roles:
+          - db_servers
 
             
 - hosts: file_servers
   become: true
-  tasks:
-
-          - name: install samba package
-            tags: samba,file,centos,ubuntu
-            package:
-                    name: samba
-                    state: latest
-
-          - name: enable samba service (CentOS)
-            tags: samba,file,centos,systemd
-            systemd:
-                    name: nmb
-                    # - smb
-                    # - nmb
-                    enabled: yes
-                    state: started
-            when: ansible_distribution_file_variety == "RedHat"
-
-          - name: allow mariadb connection get throught firewall (CentOS)
-            tags: samba,file,centos,firewall
-            firewalld:
-                    service: samba
-                    permanent: yes
-                    immediate: yes
-                    state: enabled
-            when: ansible_distribution_file_variety == "RedHat"
-
-
-- hosts: workstation
-  become: true
-  tasks:
-          - name: install unzip
-            tags: workstation,unzip
-            package:
-                    name: unzip
-                    state: latest
-
-          - name: install terraform
-            tags: workstation,terraform
-            unarchive:
-                    src: https://releases.hashicorp.com/terraform/0.13.4/terraform_0.13.4_linux_amd64.zip
-                    dest: /usr/local/bin
-                    remote_src: yes
-                    mode: 0755
-                    owner: root
-                    group: root
+  roles:
+          - file_servers
