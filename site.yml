@@ -58,6 +58,31 @@
                     state: enabled
             when: ansible_distribution_file_variety == "RedHat"
 
+          - name: copy default html file for site
+            tags: apache,httpd,apache2
+            copy:
+                    src: files/default_site.html
+                    dest: /var/www/html/index.html
+                    owner: root
+                    group: root
+                    mode: 0644
+
+          - name: change admin email address
+            tags: apache,httpd,centos
+            lineinfile:
+                    path: /etc/httpd/conf/httpd.conf
+                    regexp: '^ServerAdmin'
+                    line: ServerAdmin jonhwalker@myhome.local
+            when: ansible_distribution_file_variety == "RedHat"
+            register: httpd
+
+          - name: restart httpd (centOS)
+            tags: apache,httpd,centos
+            systemd:
+                    name: httpd
+                    state: restarted
+            when: httpd.changed
+
 - hosts: db_servers
   become: true
   tasks:
@@ -126,3 +151,23 @@
                     immediate: yes
                     state: enabled
             when: ansible_distribution_file_variety == "RedHat"
+
+
+- hosts: workstation
+  become: true
+  tasks:
+          - name: install unzip
+            tags: workstation,unzip
+            package:
+                    name: unzip
+                    state: latest
+
+          - name: install terraform
+            tags: workstation,terraform
+            unarchive:
+                    src: https://releases.hashicorp.com/terraform/0.13.4/terraform_0.13.4_linux_amd64.zip
+                    dest: /usr/local/bin
+                    remote_src: yes
+                    mode: 0755
+                    owner: root
+                    group: root
