@@ -1,0 +1,128 @@
+---
+
+- hosts: all 
+  become: true
+  pre_tasks:
+
+          - name: install updates (CentOS8)
+            tags: allways
+            dnf:
+                    update_only: yes
+                    update_cache: yes
+            when: ansible_distribution_file_variety == "RedHat"
+            
+          - name: install updates (Ubuntu)
+            tags: allways
+            apt:
+                    upgrade: dist
+                    update_cache: yes
+            when: ansible_distribution_file_variety == "Debian"
+
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+          - name: install apache and php support package (Ubuntu)
+            tags: apache,apache2,httpd
+            apt:
+                    name:
+                            - apache2
+                            - libapache2-mod-php
+                    state: latest
+            when: ansible_distribution_file_variety == "Debian"
+
+          - name: install apache and php support package (CentOS)
+            tags: apache,httpd,centos
+            dnf:
+                    name:
+                            - httpd
+                            - php
+                    state: latest
+            when: ansible_distribution_file_variety == "RedHat"
+
+          - name: enable apache2
+            tags: apache,httpd,systemd,centos
+            systemd:
+                    name: httpd
+                    enabled: yes
+                    state: started
+            when: ansible_distribution_file_variety == "RedHat"
+
+          - name: allow firewall on http
+            tags: apache,httpd,firewall,centos
+            firewalld:
+                    port: 80/tcp
+                    permanent: yes
+                    immediate: yes
+                    state: enabled
+            when: ansible_distribution_file_variety == "RedHat"
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+          - name: install mariadb package (Ubuntu)
+            tags: mariadb,db,ubuntu
+            apt:
+                    name: mariadb-server
+                    state: latest
+            when: ansible_distribution_file_variety == "Debian"
+
+          - name: install mariadb package (CentOS)
+            tags: mariadb,db,centos
+            dnf:
+                    name:
+                            - mariadb
+                            - mariadb-server
+                    state: latest
+            when: ansible_distribution_file_variety == "RedHat"
+
+          - name: enable mariadb service (CentOS)
+            tags: mariadb,db,centos,systemd
+            systemd:
+                    name: mariadb
+                    enabled: yes
+                    state: started
+            when: ansible_distribution_file_variety == "RedHat"
+
+          - name: allow mariadb connection get throught firewall (CentOS)
+            tags: mariadb,db,centos,firewall
+            firewalld:
+                    port: 3306/tcp
+                    permanent: yes
+                    immediate: yes
+                    state: enabled
+            when: ansible_distribution_file_variety == "RedHat"
+
+
+
+            
+- hosts: file_servers
+  become: true
+  tasks:
+
+          - name: install samba package
+            tags: samba,file,centos,ubuntu
+            package:
+                    name: samba
+                    state: latest
+
+          - name: enable samba service (CentOS)
+            tags: samba,file,centos,systemd
+            systemd:
+                    name: 
+                            - smb
+                            - nmb
+                    enabled: yes
+                    state: started
+            when: ansible_distribution_file_variety == "RedHat"
+
+          - name: allow mariadb connection get throught firewall (CentOS)
+            tags: samba,file,centos,firewall
+            firewalld:
+                    service: samba
+                    permanent: yes
+                    immediate: yes
+                    state: enabled
+            when: ansible_distribution_file_variety == "RedHat"
