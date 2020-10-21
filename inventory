@@ -8,5 +8,5 @@
 [file_servers]
 10.10.10.13 
 
-[workstation]
+[workstations]
 10.10.10.132
