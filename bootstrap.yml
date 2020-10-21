@@ -1,0 +1,44 @@
+---
+
+- hosts: all 
+  become: true
+  pre_tasks:
+
+          - name: install updates (CentOS8)
+            tags: allways
+            dnf:
+                    update_only: yes
+                    update_cache: yes
+            when: ansible_distribution_file_variety == "RedHat"
+            
+          - name: install updates (Ubuntu)
+            tags: allways
+            apt:
+                    upgrade: dist
+                    update_cache: yes
+            when: ansible_distribution_file_variety == "Debian"
+
+
+- hosts: all
+  become: true
+  tasks:
+          - name: create user siri
+            tags: always
+            user:
+                    name: siri
+                    group: root
+
+          - name: add ssh key for siri
+            tags: always
+            authorized_key:
+                    user: siri
+                    key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPK3pLWdyGVYS1RQKnC/QYnAy9uyazqe6V9ScEG0vtIv ansible
+
+          - name: add sudoers file to siri
+            tags: always
+            copy:
+                    src: files/sudoer_siri
+                    dest: /etc/sudoers.d/siri
+                    mode:  0440
+                    owner: root
+                    group: root
