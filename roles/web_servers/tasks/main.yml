@@ -1,0 +1,59 @@
+- name: install httpd package (CentOS)
+  tags: httpd,apache,centos
+  dnf:
+          name:
+                  - httpd
+                  - php
+          state: latest
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: install apache2 package (Ubuntu)
+  tags: apache2,apache,ubuntu
+  apt:
+          name:
+                  - apache2
+                  - libapache2-mod-php
+          state: latest
+  when: ansible_distribution_file_variety == "Debian"
+   
+- name: copy index file to webserver (CentOS)
+  tags: httpd,apache,centos
+  copy:
+          src: files/default_site.html
+          dest: /var/www/html/index.html
+          owner: root
+          group: root
+          mode: 0644
+
+- name: restart httpd service (CentOS)
+  tags: httpd,apache,centos,systemd
+  systemd:
+          name: httpd
+          enabled: yes
+          state: restarted
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: allow http connection through firewall (CentOS)
+  tags: httpd,apache,centos,firewalld
+  firewalld:
+          port: 80/tcp
+          permanent: yes
+          immediate: yes
+          state: enabled
+  when: ansible_distribution_file_variety == "RedHat"
+  
+- name: chage admin email address (CentOS)
+  tags: httpd,apache,centos
+  lineinfile:
+          path: /etc/httpd/conf/httpd.conf
+          regexp: "^ServerAdmin"
+          line: ServerAdmin jonhwalker@myhome.local
+  when: ansible_distribution_file_variety == "RedHat"
+  register: httpd
+
+- name: restart httpd (CentOS)
+  tags: httpd
+  systemd:
+          name: httpd
+          state: restarted
+  when: httpd.changed

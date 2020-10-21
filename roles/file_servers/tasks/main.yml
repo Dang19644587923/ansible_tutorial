@@ -1,0 +1,22 @@
+- name: install samba package
+  tags: samba
+  package:
+          name: samba
+          state: latest
+
+- name: restart samba service (CentOS)
+  tags: samba,centos,systemd
+  systemd:
+          name: smb
+          enabled: yes
+          state: restarted
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: allow samba throught firewall (CentOS)
+  tags: samba,centos,firewall
+  firewalld:
+          service: samba
+          permanent: yes
+          immediate: yes
+          state: enabled
+  when: ansible_distribution_file_variety == "RedHat"

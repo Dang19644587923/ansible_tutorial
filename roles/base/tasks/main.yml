@@ -1,0 +1,4 @@
+- name: add ssh key for siri
+  authorized_key:
+          user: siri
+          key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPK3pLWdyGVYS1RQKnC/QYnAy9uyazqe6V9ScEG0vtIv ansible"

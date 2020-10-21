@@ -1,0 +1,32 @@
+- name: install mariadb server package (CentOS)
+  tags: mariadb,db,centos
+  dnf:
+          name:
+                  - mariadb
+                  - mariadb-server
+          state: latest
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: install mariadb server package (Ubuntu)
+  tags: mariadb,db,ubuntu
+  apt:
+          name: mariadb-server
+          state: latest
+  when: ansible_distribution_file_variety == "Debian"
+
+- name: restart db service (CentOS)
+  tags: mariadb,db,centos,systemd
+  systemd:
+          name: mariadb
+          enabled: yes
+          state: restarted
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: allow db connection through firewall (CentOS)
+  tags: mariadb,db,centos,firewalld
+  firewalld:
+          port: 3306/tcp
+          permanent: yes
+          immediate: yes
+          state: enabled
+  when: ansible_distribution_file_variety == "RedHat"
